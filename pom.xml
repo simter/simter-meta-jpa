@@ -42,6 +42,11 @@
       <artifactId>javax.inject</artifactId>
     </dependency>
     <dependency>
+      <groupId>javax.persistence</groupId>
+      <artifactId>persistence-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>tech.simter</groupId>
       <artifactId>simter-meta</artifactId>
     </dependency>
