@@ -1,8 +1,8 @@
 package tech.simter.meta.dao;
 
-import tech.simter.meta.po.MetaDoc;
-import tech.simter.meta.po.MetaHistory;
-import tech.simter.meta.po.MetaType;
+import tech.simter.meta.po.Document;
+import tech.simter.meta.po.Operation;
+import tech.simter.meta.po.Operator;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -11,9 +11,9 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 /**
- * JPA DAO Implementation
+ * The MetaDAO JPA Implementation.
  *
- * @author RJ 2017-04-25
+ * @author RJ
  */
 @Named
 @Singleton
@@ -22,25 +22,10 @@ public class MetaDaoJpaImpl implements MetaDao {
   private EntityManager entityManager;
 
   @Override
-  public void createMetaType(MetaType metaType) {
-    entityManager.persist(metaType);
-  }
-
-  @Override
-  public void createMetaDoc(MetaDoc metaDoc) {
-    entityManager.persist(metaDoc);
-  }
-
-  @Override
-  public void createMetaHistory(MetaHistory metaHistory) {
-    entityManager.persist(metaHistory);
-  }
-
-  @Override
-  public MetaType getMetaType(String metaType) {
+  public Document getDocument(String type) {
     try {
-      return entityManager.createQuery("select m from MetaType m where type = :type", MetaType.class)
-        .setParameter("type", metaType)
+      return entityManager.createQuery("select d from Document d where type = :type", Document.class)
+        .setParameter("type", type)
         .getSingleResult();
     } catch (NoResultException e) {
       return null;
@@ -48,13 +33,33 @@ public class MetaDaoJpaImpl implements MetaDao {
   }
 
   @Override
-  public MetaDoc getMetaDoc(Class docType) {
+  public Document getDocument(Class type) {
+    return null == type ? null : getDocument(type.getName());
+  }
+
+  @Override
+  public void createDocument(Document document) {
+    entityManager.persist(document);
+  }
+
+  @Override
+  public Operator getOperator(Integer operatorId) {
     try {
-      return entityManager.createQuery("select m from MetaDoc m where type = :type", MetaDoc.class)
-        .setParameter("type", docType.getName())
+      return entityManager.createQuery("select u from Operator u where id = :id", Operator.class)
+        .setParameter("id", operatorId)
         .getSingleResult();
-    } catch (Exception e) {
+    } catch (NoResultException e) {
       return null;
     }
+  }
+
+  @Override
+  public void createOperator(Operator operator) {
+    entityManager.persist(operator);
+  }
+
+  @Override
+  public void createOperation(Operation operation) {
+    entityManager.persist(operation);
   }
 }

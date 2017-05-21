@@ -9,9 +9,9 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
-import tech.simter.meta.po.MetaDoc;
-import tech.simter.meta.po.MetaHistory;
-import tech.simter.meta.po.MetaType;
+import tech.simter.meta.po.Document;
+import tech.simter.meta.po.Operation;
+import tech.simter.meta.po.Operator;
 
 import java.time.OffsetDateTime;
 
@@ -22,7 +22,7 @@ import static org.junit.Assert.assertThat;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = {MetaDaoJpaImpl.class})
 @DataJpaTest
-@EntityScan(basePackageClasses = {MetaHistory.class})
+@EntityScan(basePackageClasses = {Operation.class})
 public class MetaDaoJpaImplTest {
   @Autowired
   private TestEntityManager entityManager;
@@ -31,65 +31,94 @@ public class MetaDaoJpaImplTest {
 
   @Before
   public void setUp() throws Exception {
-    entityManager.getEntityManager().createQuery("delete from MetaType").executeUpdate();
-    entityManager.getEntityManager().createQuery("delete from MetaDoc").executeUpdate();
-    entityManager.getEntityManager().createQuery("delete from MetaHistory").executeUpdate();
+    entityManager.getEntityManager().createQuery("delete from Operation").executeUpdate();
+    entityManager.getEntityManager().createQuery("delete from Operator").executeUpdate();
+    entityManager.getEntityManager().createQuery("delete from Document").executeUpdate();
     entityManager.flush();
   }
 
   @Test
-  public void getMetaType() throws Exception {
-    assertThat(metaDao.getMetaType("creation"), nullValue());
-    MetaType po = new MetaType();
-    po.type = "creation";
-    entityManager.persist(po);
-    assertThat(metaDao.getMetaType("creation"), is(po));
-  }
-
-  @Test
-  public void createMetaType() throws Exception {
-    MetaType po = new MetaType();
-    po.type = "xxx";
-    metaDao.createMetaType(po);
-    assertThat(metaDao.getMetaType("xxx"), is(po));
-  }
-
-  @Test
-  public void getMetaDoc() throws Exception {
-    assertThat(metaDao.getMetaDoc(MyDoc.class), nullValue());
-    MetaDoc po = new MetaDoc();
+  public void getDocumentByClass() throws Exception {
+    assertThat(metaDao.getDocument(MyDoc.class), nullValue());
+    Document po = new Document();
     po.type = MyDoc.class.getName();
     entityManager.persist(po);
-    assertThat(metaDao.getMetaDoc(MyDoc.class), is(po));
+    entityManager.flush();
+    entityManager.clear();
+
+    assertThat(metaDao.getDocument(MyDoc.class).id, is(po.id));
   }
 
   @Test
-  public void createMetaDoc() throws Exception {
-    MetaDoc po = new MetaDoc();
+  public void getDocumentByString() throws Exception {
+    assertThat(metaDao.getDocument(MyDoc.class.getName()), nullValue());
+    Document po = new Document();
     po.type = MyDoc.class.getName();
-    metaDao.createMetaDoc(po);
-    assertThat(metaDao.getMetaDoc(MyDoc.class), is(po));
+    entityManager.persist(po);
+    entityManager.flush();
+    entityManager.clear();
+
+    assertThat(metaDao.getDocument(MyDoc.class.getName()).id, is(po.id));
   }
 
   @Test
-  public void createMetaHistory() throws Exception {
-    MetaType metaType = new MetaType();
-    metaType.type = "xxx";
-    entityManager.persist(metaType);
+  public void createDocument() throws Exception {
+    Document po = new Document();
+    po.type = MyDoc.class.getName();
+    metaDao.createDocument(po);
+    entityManager.flush();
+    entityManager.clear();
 
-    MetaDoc metaDoc = new MetaDoc();
-    metaDoc.type = MyDoc.class.getName();
-    entityManager.persist(metaDoc);
+    assertThat(metaDao.getDocument(MyDoc.class).id, is(po.id));
+  }
 
-    MetaHistory metaHistory = new MetaHistory();
-    metaHistory.time = OffsetDateTime.now();
-    metaHistory.actor = 1;
-    metaHistory.metaType = metaType;
-    metaHistory.metaDoc = metaDoc;
-    metaHistory.docId = 1;
-    metaDao.createMetaHistory(metaHistory);
+  @Test
+  public void getOperator() throws Exception {
+    assertThat(metaDao.getOperator(1), nullValue());
+    Operator po = new Operator();
+    po.id = 1;
+    po.name = "simter";
+    entityManager.persist(po);
+    entityManager.flush();
+    entityManager.clear();
 
-    assertThat(entityManager.find(MetaHistory.class, metaHistory.id), is(metaHistory));
+    assertThat(metaDao.getOperator(1).id, is(po.id));
+  }
+
+  @Test
+  public void createOperator() throws Exception {
+    Operator po = new Operator();
+    po.id = 1;
+    po.name = "simter";
+    metaDao.createOperator(po);
+    entityManager.flush();
+    entityManager.clear();
+
+    assertThat(metaDao.getOperator(1).id, is(po.id));
+  }
+
+  @Test
+  public void createOperation() throws Exception {
+    Operator operator = new Operator();
+    operator.id = 1;
+    operator.name = "simter";
+    entityManager.persist(operator);
+
+    Document doc = new Document();
+    doc.type = MyDoc.class.getName();
+    entityManager.persist(doc);
+
+    Operation history = new Operation();
+    history.operateTime = OffsetDateTime.now();
+    history.operator = operator;
+    history.type = Operation.Type.Creation.value();
+    history.document = doc;
+    history.instanceId = 1;
+    metaDao.createOperation(history);
+    entityManager.flush();
+    entityManager.clear();
+
+    assertThat(entityManager.find(Operation.class, history.id).id, is(history.id));
   }
 
   class MyDoc {
