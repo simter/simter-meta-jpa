@@ -62,4 +62,16 @@ public class MetaDaoJpaImpl implements MetaDao {
   public void createOperation(Operation operation) {
     entityManager.persist(operation);
   }
+
+  @Override
+  public Document createOrGetDocumentByType(String type, String name) {
+    Document document = getDocument(type);
+    if (document == null) {
+      document = new Document();
+      document.type = type;
+      document.name = name == null || name.isEmpty() ? type : name;
+      createDocument(document);
+    }
+    return document;
+  }
 }
