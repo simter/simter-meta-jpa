@@ -13,8 +13,6 @@ import tech.simter.meta.po.Document;
 import tech.simter.meta.po.Operation;
 import tech.simter.meta.po.Operator;
 
-import java.time.OffsetDateTime;
-
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 import static tech.simter.meta.POUtils.*;
@@ -40,85 +38,76 @@ public class MetaDaoJpaImplTest {
   @Test
   public void getDocumentByClass() throws Exception {
     assertThat(metaDao.getDocument(MyDoc.class), nullValue());
-    Document po = new Document();
-    po.type = MyDoc.class.getName();
-    em.persist(po);
-    em.flush();
-    em.clear();
 
+    // init
+    Document po = document(MyDoc.class);
+    em.persist(po);
+    flushAndClear(em);
+
+    // verify
     assertThat(metaDao.getDocument(MyDoc.class).id, is(po.id));
   }
 
   @Test
   public void getDocumentByString() throws Exception {
     assertThat(metaDao.getDocument(MyDoc.class.getName()), nullValue());
-    Document po = new Document();
-    po.type = MyDoc.class.getName();
-    em.persist(po);
-    em.flush();
-    em.clear();
 
+    // init
+    Document po = document(MyDoc.class);
+    em.persist(po);
+    flushAndClear(em);
+
+    // verify
     assertThat(metaDao.getDocument(MyDoc.class.getName()).id, is(po.id));
   }
 
   @Test
   public void createDocument() throws Exception {
-    Document po = new Document();
-    po.type = MyDoc.class.getName();
+    Document po = document(MyDoc.class);
     metaDao.createDocument(po);
-    em.flush();
-    em.clear();
-
+    flushAndClear(em);
     assertThat(metaDao.getDocument(MyDoc.class).id, is(po.id));
   }
 
   @Test
   public void getOperator() throws Exception {
     assertThat(metaDao.getOperator(1), nullValue());
-    Operator po = new Operator();
-    po.id = 1;
-    po.name = "simter";
-    em.persist(po);
-    em.flush();
-    em.clear();
 
+    // init
+    Operator po = operator(1);
+    em.persist(po);
+    flushAndClear(em);
+
+    // verify
     assertThat(metaDao.getOperator(1).id, is(po.id));
   }
 
   @Test
   public void createOperator() throws Exception {
-    Operator po = new Operator();
-    po.id = 1;
-    po.name = "simter";
-    metaDao.createOperator(po);
-    em.flush();
-    em.clear();
+    // init
+    Operator po = operator(1);
 
+    // invoke
+    metaDao.createOperator(po);
+    flushAndClear(em);
+
+    // verify
     assertThat(metaDao.getOperator(1).id, is(po.id));
   }
 
   @Test
   public void createOperation() throws Exception {
-    Operator operator = new Operator();
-    operator.id = 1;
-    operator.name = "simter";
-    em.persist(operator);
+    // init
+    Operator operator = em.persist(operator(1));
+    Document document = em.persist(document(MyDoc.class));
+    Operation operation = operation(operator, Operation.Type.Creation, document, 1);
 
-    Document doc = new Document();
-    doc.type = MyDoc.class.getName();
-    em.persist(doc);
+    // invoke
+    metaDao.createOperation(operation);
+    flushAndClear(em);
 
-    Operation history = new Operation();
-    history.operateTime = OffsetDateTime.now();
-    history.operator = operator;
-    history.type = Operation.Type.Creation.value();
-    history.document = doc;
-    history.instanceId = 1;
-    metaDao.createOperation(history);
-    em.flush();
-    em.clear();
-
-    assertThat(em.find(Operation.class, history.id).id, is(history.id));
+    // verify
+    assertThat(em.find(Operation.class, operation.id).id, is(operation.id));
   }
 
   @Test
