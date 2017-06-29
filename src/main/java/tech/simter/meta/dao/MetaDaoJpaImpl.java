@@ -74,4 +74,19 @@ public class MetaDaoJpaImpl implements MetaDao {
     }
     return document;
   }
+
+  @Override
+  public Operator getCreator(Class entityType, Integer entityId) {
+    try {
+      String ql = "select o.operator from Operation o" +
+        " where o.document.type = :entityType and o.instanceId = :entityId and o.type = :type";
+      return entityManager.createQuery(ql, Operator.class)
+        .setParameter("entityType", entityType.getName())
+        .setParameter("entityId", entityId)
+        .setParameter("type", Operation.Type.Creation.value())
+        .getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
 }

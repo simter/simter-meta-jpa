@@ -15,9 +15,9 @@ import tech.simter.meta.po.Operator;
 
 import java.time.OffsetDateTime;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
+import static tech.simter.meta.POUtils.*;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = {MetaDaoJpaImpl.class})
@@ -25,16 +25,16 @@ import static org.junit.Assert.assertThat;
 @EntityScan(basePackageClasses = {Operation.class})
 public class MetaDaoJpaImplTest {
   @Autowired
-  private TestEntityManager entityManager;
+  private TestEntityManager em;
   @Autowired
   private MetaDao metaDao;
 
   @Before
   public void setUp() throws Exception {
-    entityManager.getEntityManager().createQuery("delete from Operation").executeUpdate();
-    entityManager.getEntityManager().createQuery("delete from Operator").executeUpdate();
-    entityManager.getEntityManager().createQuery("delete from Document").executeUpdate();
-    entityManager.flush();
+    em.getEntityManager().createQuery("delete from Operation").executeUpdate();
+    em.getEntityManager().createQuery("delete from Operator").executeUpdate();
+    em.getEntityManager().createQuery("delete from Document").executeUpdate();
+    em.flush();
   }
 
   @Test
@@ -42,9 +42,9 @@ public class MetaDaoJpaImplTest {
     assertThat(metaDao.getDocument(MyDoc.class), nullValue());
     Document po = new Document();
     po.type = MyDoc.class.getName();
-    entityManager.persist(po);
-    entityManager.flush();
-    entityManager.clear();
+    em.persist(po);
+    em.flush();
+    em.clear();
 
     assertThat(metaDao.getDocument(MyDoc.class).id, is(po.id));
   }
@@ -54,9 +54,9 @@ public class MetaDaoJpaImplTest {
     assertThat(metaDao.getDocument(MyDoc.class.getName()), nullValue());
     Document po = new Document();
     po.type = MyDoc.class.getName();
-    entityManager.persist(po);
-    entityManager.flush();
-    entityManager.clear();
+    em.persist(po);
+    em.flush();
+    em.clear();
 
     assertThat(metaDao.getDocument(MyDoc.class.getName()).id, is(po.id));
   }
@@ -66,8 +66,8 @@ public class MetaDaoJpaImplTest {
     Document po = new Document();
     po.type = MyDoc.class.getName();
     metaDao.createDocument(po);
-    entityManager.flush();
-    entityManager.clear();
+    em.flush();
+    em.clear();
 
     assertThat(metaDao.getDocument(MyDoc.class).id, is(po.id));
   }
@@ -78,9 +78,9 @@ public class MetaDaoJpaImplTest {
     Operator po = new Operator();
     po.id = 1;
     po.name = "simter";
-    entityManager.persist(po);
-    entityManager.flush();
-    entityManager.clear();
+    em.persist(po);
+    em.flush();
+    em.clear();
 
     assertThat(metaDao.getOperator(1).id, is(po.id));
   }
@@ -91,8 +91,8 @@ public class MetaDaoJpaImplTest {
     po.id = 1;
     po.name = "simter";
     metaDao.createOperator(po);
-    entityManager.flush();
-    entityManager.clear();
+    em.flush();
+    em.clear();
 
     assertThat(metaDao.getOperator(1).id, is(po.id));
   }
@@ -102,11 +102,11 @@ public class MetaDaoJpaImplTest {
     Operator operator = new Operator();
     operator.id = 1;
     operator.name = "simter";
-    entityManager.persist(operator);
+    em.persist(operator);
 
     Document doc = new Document();
     doc.type = MyDoc.class.getName();
-    entityManager.persist(doc);
+    em.persist(doc);
 
     Operation history = new Operation();
     history.operateTime = OffsetDateTime.now();
@@ -115,10 +115,31 @@ public class MetaDaoJpaImplTest {
     history.document = doc;
     history.instanceId = 1;
     metaDao.createOperation(history);
-    entityManager.flush();
-    entityManager.clear();
+    em.flush();
+    em.clear();
 
-    assertThat(entityManager.find(Operation.class, history.id).id, is(history.id));
+    assertThat(em.find(Operation.class, history.id).id, is(history.id));
+  }
+
+  @Test
+  public void getCreator() throws Exception {
+    int entityId = 1;
+    assertThat(metaDao.getCreator(MyDoc.class, entityId), nullValue());
+
+    // init
+    Operator operator = em.persist(operator(1));
+    Document document = em.persist(document(MyDoc.class));
+    Operation operation = operation(operator, Operation.Type.Creation, document, entityId);
+    em.persist(operation);
+    flushAndClear(em);
+
+    // invoke
+    Operator creator = metaDao.getCreator(MyDoc.class, entityId);
+
+    //  verify
+    assertThat(creator, notNullValue());
+    assertThat(creator.id, is(operator.id));
+    assertThat(creator.name, is(operator.name));
   }
 
   class MyDoc {
