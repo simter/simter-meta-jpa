@@ -55,7 +55,7 @@ public final class POUtils {
     po.instanceId = instanceId;
     po.document = document;
     po.operator = operator;
-    po.operateTime = OffsetDateTime.now();
+    po.operateOn = OffsetDateTime.now();
     po.type = operateType.value();
     return po;
   }
