@@ -131,6 +131,58 @@ public class MetaDaoJpaImplTest {
     assertThat(creator.name, is(operator.name));
   }
 
+  @Test
+  public void getLastOperation() throws Exception {
+    int entityId = 1;
+    assertThat(metaDao.getLastOperation(MyDoc.class.getName(), entityId, Operation.Type.Creation.value()), nullValue());
+
+    // init
+    Operator operator = em.persist(operator(1));
+    Document document = em.persist(document(MyDoc.class));
+    Operation expected = operation(operator, Operation.Type.Creation, document, entityId);
+    em.persist(expected);
+    flushAndClear(em);
+
+    // invoke
+    Operation actual = metaDao.getLastOperation(MyDoc.class.getName(), entityId, Operation.Type.Creation.value());
+
+    //  verify
+    assertThat(actual, notNullValue());
+    assertThat(actual.id, is(expected.id));
+    assertThat(actual.operator.id, is(expected.operator.id));
+    assertThat(actual.document.id, is(expected.document.id));
+    assertThat(actual.instanceId, is(expected.instanceId));
+    assertThat(actual.type, is(expected.type));
+    assertThat(actual.operateOn, is(expected.operateOn));
+  }
+
+  @Test
+  public void getLastOperationWithTwoTypes() throws Exception {
+    int entityId = 1;
+    int[] types = new int[]{Operation.Type.Creation.value(), Operation.Type.Modification.value()};
+    assertThat(metaDao.getLastOperation(MyDoc.class.getName(), entityId, types), nullValue());
+
+    // init
+    int operatorId = 90;
+    Operator operator = em.persist(operator(++operatorId));
+    Document document = em.persist(document(MyDoc.class));
+    em.persist(operation(operator, Operation.Type.Creation, document, entityId));
+    Operation expected = em.persist(operation(operator, Operation.Type.Modification, document, entityId));
+    flushAndClear(em);
+
+    // invoke
+    Operation actual = metaDao.getLastOperation(MyDoc.class.getName(), entityId, types);
+
+    //  verify
+    assertThat(actual, notNullValue());
+    assertThat(actual.id, is(expected.id));
+    assertThat(actual.operator.id, is(expected.operator.id));
+    assertThat(actual.document.id, is(expected.document.id));
+    assertThat(actual.instanceId, is(expected.instanceId));
+    assertThat(actual.type, is(expected.type));
+    assertThat(actual.operateOn, is(expected.operateOn));
+  }
+
   class MyDoc {
   }
 }

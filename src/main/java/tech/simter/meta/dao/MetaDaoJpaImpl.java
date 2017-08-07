@@ -9,6 +9,9 @@ import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The MetaDAO JPA Implementation.
@@ -85,6 +88,41 @@ public class MetaDaoJpaImpl implements MetaDao {
         .setParameter("entityId", entityId)
         .setParameter("type", Operation.Type.Creation.value())
         .getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
+
+  @Override
+  public Operation getLastOperation(String entityType, Integer entityId, int operationType) {
+    return getLastOperation(entityType, entityId, new int[]{operationType});
+  }
+
+  @Override
+  public Operation getLastOperation(String entityType, Integer entityId, int[] operationTypes) {
+    boolean hasOperationType = operationTypes != null && operationTypes.length > 0;
+    try {
+      String ql = "select o from Operation o" +
+        " where o.document.type = :entityType and o.instanceId = :entityId";
+      if (hasOperationType) ql += " and o.type in :types";
+      ql += " order by o.operateOn desc";
+//      ql += "\nand not exists (" +
+//        "\n  select 0 from Operation o2" +
+//        "\n  where o2.document.type = o.document.type and o2.instanceId = o.instanceId";
+//      if (hasOperationType) ql += " and o2.type in :types";
+//      ql += "\n  and o2.operateOn < o.operateOn" +
+//        "\n)";
+      TypedQuery<Operation> query = entityManager.createQuery(ql, Operation.class)
+        .setParameter("entityType", entityType)
+        .setParameter("entityId", entityId);
+      if (hasOperationType) {
+        List<Integer> types = new ArrayList<>();
+        for (int i = 0; i < operationTypes.length; i++) types.add(operationTypes[i]);
+        query.setParameter("types", types);
+      }
+      query.setFirstResult(0);
+      query.setMaxResults(1);
+      return query.getSingleResult();
     } catch (NoResultException e) {
       return null;
     }
