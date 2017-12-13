@@ -4,10 +4,11 @@
   <parent>
     <groupId>tech.simter</groupId>
     <artifactId>simter-parent</artifactId>
-    <version>0.3-SNAPSHOT</version>
+    <version>0.3.0</version>
     <relativePath/>
   </parent>
   <artifactId>simter-meta-jpa</artifactId>
+  <version>0.3.0</version>
   <packaging>jar</packaging>
   <name>simter-meta-jpa</name>
   <description>The simter-meta JPA DAO implementation</description>
