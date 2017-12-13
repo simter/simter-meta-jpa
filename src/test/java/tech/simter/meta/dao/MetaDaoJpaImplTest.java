@@ -3,8 +3,7 @@ package tech.simter.meta.dao;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.ContextConfiguration;
@@ -12,23 +11,31 @@ import org.springframework.test.context.junit4.SpringRunner;
 import tech.simter.meta.po.Document;
 import tech.simter.meta.po.Operation;
 import tech.simter.meta.po.Operator;
+import tech.simter.test.jpa.EntityScan;
+import tech.simter.test.jpa.JpaTestConfiguration;
+
+import javax.inject.Inject;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 import static tech.simter.meta.POUtils.*;
 
+/**
+ * @author RJ
+ */
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = {MetaDaoJpaImpl.class})
+@ContextConfiguration(classes = {MetaDaoJpaImpl.class, JpaTestConfiguration.class})
+@EnableAutoConfiguration
 @DataJpaTest
-@EntityScan(basePackageClasses = {Operation.class})
+@EntityScan({Operation.class, Document.class, Operator.class})
 public class MetaDaoJpaImplTest {
-  @Autowired
+  @Inject
   private TestEntityManager em;
-  @Autowired
+  @Inject
   private MetaDao metaDao;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     em.getEntityManager().createQuery("delete from Operation").executeUpdate();
     em.getEntityManager().createQuery("delete from Operator").executeUpdate();
     em.getEntityManager().createQuery("delete from Document").executeUpdate();
@@ -36,7 +43,7 @@ public class MetaDaoJpaImplTest {
   }
 
   @Test
-  public void getDocumentByClass() throws Exception {
+  public void getDocumentByClass() {
     assertThat(metaDao.getDocument(MyDoc.class), nullValue());
 
     // init
@@ -49,7 +56,7 @@ public class MetaDaoJpaImplTest {
   }
 
   @Test
-  public void getDocumentByString() throws Exception {
+  public void getDocumentByString() {
     assertThat(metaDao.getDocument(MyDoc.class.getName()), nullValue());
 
     // init
@@ -62,7 +69,7 @@ public class MetaDaoJpaImplTest {
   }
 
   @Test
-  public void createDocument() throws Exception {
+  public void createDocument() {
     Document po = document(MyDoc.class);
     metaDao.createDocument(po);
     flushAndClear(em);
@@ -70,7 +77,7 @@ public class MetaDaoJpaImplTest {
   }
 
   @Test
-  public void getOperator() throws Exception {
+  public void getOperator() {
     assertThat(metaDao.getOperator(1), nullValue());
 
     // init
@@ -83,7 +90,7 @@ public class MetaDaoJpaImplTest {
   }
 
   @Test
-  public void createOperator() throws Exception {
+  public void createOperator() {
     // init
     Operator po = operator(1);
 
@@ -96,7 +103,7 @@ public class MetaDaoJpaImplTest {
   }
 
   @Test
-  public void createOperation() throws Exception {
+  public void createOperation() {
     // init
     Operator operator = em.persist(operator(1));
     Document document = em.persist(document(MyDoc.class));
@@ -111,7 +118,7 @@ public class MetaDaoJpaImplTest {
   }
 
   @Test
-  public void getCreator() throws Exception {
+  public void getCreator() {
     int entityId = 1;
     assertThat(metaDao.getCreator(MyDoc.class, entityId), nullValue());
 
@@ -132,7 +139,7 @@ public class MetaDaoJpaImplTest {
   }
 
   @Test
-  public void getLastOperation() throws Exception {
+  public void getLastOperation() {
     int entityId = 1;
     assertThat(metaDao.getLastOperation(MyDoc.class.getName(), entityId, Operation.Type.Creation.value()), nullValue());
 
@@ -157,7 +164,7 @@ public class MetaDaoJpaImplTest {
   }
 
   @Test
-  public void getLastOperationWithTwoTypes() throws Exception {
+  public void getLastOperationWithTwoTypes() {
     int entityId = 1;
     int[] types = new int[]{Operation.Type.Creation.value(), Operation.Type.Modification.value()};
     assertThat(metaDao.getLastOperation(MyDoc.class.getName(), entityId, types), nullValue());
