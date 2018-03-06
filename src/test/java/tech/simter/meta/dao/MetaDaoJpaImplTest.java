@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.ContextConfiguration;
@@ -11,8 +12,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import tech.simter.meta.po.Document;
 import tech.simter.meta.po.Operation;
 import tech.simter.meta.po.Operator;
-import tech.simter.test.jpa.EntityScan;
-import tech.simter.test.jpa.JpaTestConfiguration;
 
 import javax.inject.Inject;
 
@@ -24,10 +23,10 @@ import static tech.simter.meta.POUtils.*;
  * @author RJ
  */
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = {MetaDaoJpaImpl.class, JpaTestConfiguration.class})
+@ContextConfiguration(classes = {MetaDaoJpaImpl.class})
 @EnableAutoConfiguration
 @DataJpaTest
-@EntityScan({Operation.class, Document.class, Operator.class})
+@EntityScan("tech.simter.meta.po")
 public class MetaDaoJpaImplTest {
   @Inject
   private TestEntityManager em;
