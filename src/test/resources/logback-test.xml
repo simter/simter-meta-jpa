@@ -2,13 +2,7 @@
 <configuration>
   <include resource="org/springframework/boot/logging/logback/base.xml"/>
   <!-- trace < debug < info < warn < error -->
-  <root level="warn"/>
+  <root level="error"/>
 
-  <logger name="org.hibernate.tool" level="error"/>
-  <!-- TRACE-jpql named params -->
-  <logger name="org.hibernate.engine.spi.QueryParameters" level="TRACE"/>
-  <!-- TRACE-SQL params, such as binding parameter [N] as [SQL-TYPW] - [VALUE] -->
-  <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
-  <!-- DEBUG-property value to db value, such as Converted value on binding : Enabled -> 2 -->
-  <logger name="org.hibernate.type.descriptor.converter.AttributeConverterSqlTypeDescriptorAdapter" level="DEBUG"/>
+  <logger name="tech.simter.meta" level="warn"/>
 </configuration>
