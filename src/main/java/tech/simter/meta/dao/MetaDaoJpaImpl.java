@@ -105,7 +105,7 @@ public class MetaDaoJpaImpl implements MetaDao {
       String ql = "select o from Operation o" +
         " where o.document.type = :entityType and o.instanceId = :entityId";
       if (hasOperationType) ql += " and o.type in :types";
-      ql += " order by o.operateOn desc";
+      ql += " order by o.operateOn desc, o.id desc";
 //      ql += "\nand not exists (" +
 //        "\n  select 0 from Operation o2" +
 //        "\n  where o2.document.type = o.document.type and o2.instanceId = o.instanceId";
